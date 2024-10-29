@@ -5,6 +5,9 @@
   :description "A secure authentication library for Common Lisp"
   :depends-on ("jose"
                "cl-redis"
+               "cl-ppcre"
+               "local-time"
+               "uuid"
                "cl-argon2")
   :components ((:module "src"
                 :components
@@ -12,7 +15,10 @@
                  (:file "conditions")
                  (:file "redis" )
                  (:file "core" )
-                 (:file "session"))))
+                 (:file "session")
+                 (:file "user")
+
+                 )))
   :in-order-to ((test-op (test-op "cl-secure-auth/tests"))))
 
 (defsystem "cl-secure-auth/tests"
