@@ -80,3 +80,5 @@
   "Check if the claims contain a specific role"
   (let ((roles (cdr (assoc "roles" claims :test #'string=))))
     (member role roles :test #'string=)))
+
+

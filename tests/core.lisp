@@ -132,15 +132,16 @@
       (ok (verify-session-token token)
           "valid token passes verification")
 
-      (ok (typep (verify-session-token token)))))
+      (ok (typep (verify-session-token token) 'list)
+          "Valid token returns claims as association list")))
 
   (testing "blacklisted tokens"
     (let* ((token (generate-session-token "test-user" '("user"))))
       ;; Simulate blacklisting the token
-      (redis:with-connection ()
-        (redis:red-set (format nil "blacklist:~A" token) "1")
-        (ok (signals (verify-session-token token)
-                'blacklisted-token-error)
-            "Blacklisted token raises blacklisted-token-error"))))
+      (blacklist-token token)
+      (ok (signals (verify-session-token token)
+              'blacklisted-token-error)
+          "Blacklisted token")
+      )))
 
-)
+
