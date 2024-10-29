@@ -33,7 +33,6 @@
                    ("roles" . ,roles)
                    ("exp" . ,exp)
                    ("iat" . ,(get-universal-time)))))
-    (princ claims)
     (jose:encode :hs256 *signing-secret* claims)))
 
 
@@ -48,24 +47,20 @@
   ;; Try to decode and verify the token
   (let ((claims (handler-case
                    (jose:decode :hs256 *signing-secret* token)
-                 (error () 
+                 (error ()
                    (error 'invalid-token-error)))))
-    
     ;; Token was decoded, now check validity conditions
     (cond
       ;; Null claims means invalid token
       ((null claims)
        (error 'invalid-token-error))
-      
       ;; Check if token has been blacklisted
       ((token-blacklisted-p token)
        (error 'blacklisted-token-error))
-      
       ;; Check expiration
       ((let ((exp (cdr (assoc "exp" claims :test #'string=))))
          (and exp (> (get-universal-time) exp)))
        (error 'session-expired-error))
-      
       ;; If all checks pass, return the claims
       (t claims))))
 

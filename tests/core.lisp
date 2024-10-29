@@ -92,3 +92,55 @@
         (ok (numberp (cdr (assoc "iat" claims :test #'string=)))
             "should have issued-at timestamp")))))
 
+(deftest token-validation-errors-test
+  (testing "Initialization"
+    (ok (initialize-auth :signing-secret "test-secret"
+                         :redis-host "localhost"
+                         :redis-port 6379 )
+        "Authentication system initializes successfully"))
+
+  (testing "invalid token formats"
+    (ok (signals (verify-session-token nil)
+            'invalid-token-error)
+        "Null token raises invalid-token-error")
+
+    (ok (signals (verify-session-token "")
+            'invalid-token-error)
+        "Empty token raises invalid-token-error")
+
+    (ok (signals (verify-session-token "not.enough.dots")
+            'invalid-token-error)
+        "Malformed token raises invalid-token-error")
+    )
+
+  (testing "expired tokens"
+    (let* ((expired-token (generate-session-token "test-user" '("user")
+                                                  :duration -1)))
+      (ok (signals (verify-session-token expired-token)
+              'session-expired-error)
+          "Expired token raised session-expired-error")))
+
+  (testing "role-based access error"
+    (let* ((user-token (generate-session-token "test-user" '("user"))))
+      (ok (signals (with-auth (user-token :required-roles '("admin"))
+                     (declare (ignore result)))
+              'permission-denied-error)
+          "Accessing admin-only route with user role raises permission-denied-error")))
+
+  (testing "valid token verification"
+    (let* ((token (generate-session-token "test-user" '("user"))))
+      (ok (verify-session-token token)
+          "valid token passes verification")
+
+      (ok (typep (verify-session-token token)))))
+
+  (testing "blacklisted tokens"
+    (let* ((token (generate-session-token "test-user" '("user"))))
+      ;; Simulate blacklisting the token
+      (redis:with-connection ()
+        (redis:red-set (format nil "blacklist:~A" token) "1")
+        (ok (signals (verify-session-token token)
+                'blacklisted-token-error)
+            "Blacklisted token raises blacklisted-token-error"))))
+
+)
