@@ -15,7 +15,7 @@
    (verified :col-type :boolean
              :initform nil
              :accessor user-verified)
-   (roles :col-type (or :jsonb :text)
+   (roles :col-type  :jsonb
           :initform (list "user")
           :accessor :user-roles))
   (:metaclass mito:dao-table-class)
@@ -94,10 +94,13 @@
                      :verified (user-verified db-user)
                      :roles (user-roles db-user)))))
 
-;(defmethod delete-user ((user user))
-  ;"Delete a user from the database"
-  ;(when-let ((db-user (mito:find-dao 'user-table :id (user-id user))))
-  ;  (mito:delete-dao db-user)))
+
+(defmethod delete-user ((user user))
+  "Delete a user from the database"
+  (let ((db-user (mito:find-dao 'user-table :id (user-id user))))
+    (when db-user
+      (mito:delete-dao db-user))))
+
 
 
 (defun save-reset-token (token user-id expires-at)

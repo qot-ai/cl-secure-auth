@@ -14,14 +14,14 @@
                "cl-argon2")
   :components ((:module "src"
                 :components
-                ((:file "package")
-                 (:file "conditions")
-                 (:file "redis" )
-                 (:file "core" )
-                 (:file "session")
-                 (:file "user")
-                 (:file "db")
-                 )))
+                        ((:file "package")
+                         (:file "conditions")
+                         (:file "redis" )
+                         (:file "core" )
+                         (:file "session")
+                         (:file "user")
+                         (:file "db")
+                         )))
   :in-order-to ((test-op (test-op "cl-secure-auth/tests"))))
 
 (defsystem "cl-secure-auth/tests"
@@ -32,6 +32,9 @@
                "rove")
   :components ((:module "tests"
                 :components
-                ((:file "core")
-                 (:file "db-test"))))
-  :perform (test-op (o c) (symbol-call :rove :run c)))
+                        ((:file "core")
+                         (:file "db-test"))))
+  :perform (test-op (o c)
+                    (symbol-call :rove :run-suite :cl-secure-auth/tests/core)
+                    (symbol-call :rove :run-suite :cl-secure-auth/tests/db)
+                    ))
