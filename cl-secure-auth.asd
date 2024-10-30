@@ -8,6 +8,9 @@
                "cl-ppcre"
                "local-time"
                "uuid"
+               "mito"
+               "mito-migration"
+               "mito-auth"
                "cl-argon2")
   :components ((:module "src"
                 :components
@@ -17,7 +20,7 @@
                  (:file "core" )
                  (:file "session")
                  (:file "user")
-
+                 (:file "db")
                  )))
   :in-order-to ((test-op (test-op "cl-secure-auth/tests"))))
 
@@ -29,5 +32,6 @@
                "rove")
   :components ((:module "tests"
                 :components
-                ((:file "core"))))
+                ((:file "core")
+                 (:file "db-test"))))
   :perform (test-op (o c) (symbol-call :rove :run c)))

@@ -33,7 +33,7 @@
 (defgeneric find-user-by-id (id)
   (:documentation "Find a user by their ID"))
 
-(defgeneric find-user-by-email (id)
+(defgeneric find-user-by-email (email)
   (:documentation "Find a user by their email address"))
 
 (defgeneric save-user (user)
