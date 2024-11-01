@@ -43,7 +43,7 @@
 (defmethod find-user-by-email (email)
   (unless (validate-email email)
     (error 'user-error :message "Invalid email format"))
-  (mito:find-dao 'user :user-email (string-downcase email)))
+  (mito:find-dao 'user :email (string-downcase email)))
 
 ;; save user
 (defgeneric save-user (user)
@@ -65,13 +65,13 @@
   "Create a new user with the given email and password"
   (unless (validate-email email)
     ;; validate user email format
-    (error 'user-error "Invalid email format"))
+    (error 'user-error :message "Invalid email format"))
   (unless (validate-password password)
     ;; validate password format
-    (error 'user-error "Password must be at least 8 characters and contain uppercase, lowercase, numbers and special characters"))
+    (error 'user-error :message "Password must be at least 8 characters and contain uppercase, lowercase, numbers and special characters"))
   ;; check if user exists
   (when (find-user-by-email email)
-    (error 'user-error "Email already registered"))
+    (error 'user-error  :message "Email already registered"))
   ;; now we can register the user. First we hash the password
   (let* ((salt (cl-argon2:generate-salt))
          (password-hash (cl-argon2:argon2-hash-encoded password salt :type :argon2id)))

@@ -9,6 +9,7 @@
    :with-auth
            :has-role-p
    :auth-error
+   :user-error
            :invalid-token-error
    :session-expired-error
            :permission-denied-error
