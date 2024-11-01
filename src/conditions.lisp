@@ -16,3 +16,8 @@
 
 (define-condition permission-denied-error (auth-error) ()
   (:default-initargs :message "Permission denied"))
+
+(define-condition user-error (error)
+  ((message :initarg :message :reader user-error-message))
+  (:report (lambda (condition stream)
+             (format stream "User error: ~A" (user-error-message condition)))))

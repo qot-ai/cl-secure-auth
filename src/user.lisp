@@ -1,65 +1,85 @@
 (in-package :cl-secure-auth)
 
 (defclass user ()
-  ((id :initarg :id
+  ((id :col-type :uuid
+       :primary-key t
        :accessor user-id
-       :type string
-       :documentation "Unique identifier for the user")
-   (email :initarg :email
-         :accessor user-email
-         :type string
-         :documentation "User's email address")
-   (password-hash :initarg :password-hash
-                  :accessor user-password-hash
-                  :type string
-                  :documentation "Argon2 hashed password")
-   (verified :initarg :verified
-             :accessor :user-verified
+       :initform (uuid:make-v4-uuid))
+   (email :col-type :text
+          :accessor user-email
+          :unique t
+          :not-null t)
+   (password-hash :col-type :text
+                  :not-null t
+                  :accessor user-password-hash)
+   (verified :col-type :boolean
              :initform nil
-             :type boolean
-             :documentation "Whether the user email is verified")
-   (created-at :initarg :created-at
-               :accessor user-created-at
-               :initform (local-time:now)
-               :type local-time:timestamp
-               :documentation "When the user account was created")
-   (roles  :initarg :roles
-           :accessor user-roles
-           :initform '("user")
-           :type list
-           :documentation "List of roles assigned to the user")))
+             :accessor user-verified)
+   (roles :col-type  :jsonb
+          :accessor user-roles-json
+          :initform (cl-json:encode-json-alist-to-string
+                     '(("roles" . ("user"))))))
+  (:metaclass mito:dao-table-class)
+  (:table-name "users"))
 
 
+;; find user by ID. 
 (defgeneric find-user-by-id (id)
   (:documentation "Find a user by their ID"))
 
+(defmethod find-user-by-id ((id string))
+  "Find user by their ID (if UUID is a string)"
+  (mito:find-dao 'user :id id))
+
+(defmethod find-user-by-id ((id uuid:uuid))
+  "Find user by their ID (uuid object)"
+  (mito:find-dao 'user :id id))
+
+
+;; find user by email
 (defgeneric find-user-by-email (email)
   (:documentation "Find a user by their email address"))
 
+(defmethod find-user-by-email (email)
+  (unless (validate-email email)
+    (error 'user-error :message "Invalid email format"))
+  (mito:find-dao 'user :user-email (string-downcase email)))
+
+;; save user
 (defgeneric save-user (user)
   (:documentation "Save or update a user"))
 
+(defmethod save-user ((user user))
+  (setf (user-updated-at user) (local-time:now))
+  (mito:save-dao user))
+
+;; delete user
 (defgeneric delete-user (user)
   (:documentation "Delete a user"))
 
+(defmethod delete-user ((user user))
+  (mito:delete-dao user))
 
-(define-condition user-error (error)
-  ((message :initarg :message :reader user-error-message))
-  (:report (lambda (condition stream)
-             (format stream "User error: ~A" (user-error-message condition)))))
-
-(defun validate-email (email)
-  "Validate email using a simple regex"
-  (cl-ppcre:scan "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" email))
-
-(defun validate-password (password)
-  "Validate password strength requiring uppercase, lowercase, numbers, and special characters"
-  (and (>= (length password) 8)
-       (cl-ppcre:scan "[A-Z]" password)      ; uppercase
-       (cl-ppcre:scan "[a-z]" password)      ; lowercase
-       (cl-ppcre:scan "[0-9]" password)      ; numbers
-       (cl-ppcre:scan "[!@#$%^&*(),.?\":{}|<>]" password))) ; special characters
-
+;; create a user
+(defun create-user (email password &key (verified nil))
+  "Create a new user with the given email and password"
+  (unless (validate-email email)
+    ;; validate user email format
+    (error 'user-error "Invalid email format"))
+  (unless (validate-password password)
+    ;; validate password format
+    (error 'user-error "Password must be at least 8 characters and contain uppercase, lowercase, numbers and special characters"))
+  ;; check if user exists
+  (when (find-user-by-email email)
+    (error 'user-error "Email already registered"))
+  ;; now we can register the user. First we hash the password
+  (let* ((salt (cl-argon2:generate-salt))
+         (password-hash (cl-argon2:argon2-hash-encoded password salt :type :argon2id)))
+    (mito:create-dao 'user 
+                     :email (string-downcase email)
+                     :password-hash password-hash
+                     :verified verified)
+                     ))
 
 
 

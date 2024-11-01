@@ -2,6 +2,7 @@
   (:use :cl)
   (:import-from :redis)
   (:import-from :jose)
+  (:import-from :sxql)
   (:export :initialize-auth
    :generate-session-token
            :verify-session-token

@@ -11,15 +11,19 @@
                "mito"
                "mito-migration"
                "mito-auth"
+               "sxql"
+               "cl-json"
                "cl-argon2")
   :components ((:module "src"
                 :components
                         ((:file "package")
+                         (:file "utils")
                          (:file "conditions")
                          (:file "redis" )
                          (:file "core" )
                          (:file "session")
                          (:file "user")
+                         (:file "token")
                          (:file "db")
                          )))
   :in-order-to ((test-op (test-op "cl-secure-auth/tests"))))
