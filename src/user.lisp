@@ -50,7 +50,6 @@
   (:documentation "Save or update a user"))
 
 (defmethod save-user ((user user))
-  (setf (user-updated-at user) (local-time:now))
   (mito:save-dao user))
 
 ;; delete user

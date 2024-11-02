@@ -79,6 +79,16 @@
       (ok (find-user-by-id user-id) "Should find user by id")
       (ng (find-user-by-id (uuid:make-v4-uuid)) "Should return nil for non existing user id"))))
 
+(deftest user-update-tests
+  (testing "update user email"
+    (clean-database)
+    (let ((user (create-user "update@example.com" "SecurePass123!")))
+      (setf (user-email user) "new@example.com")
+      (save-user user)
+      (ok (find-user-by-email "new@example.com") "Should find user with updated email")
+      (ng (find-user-by-email "update@example.com") "should not find user with old email"))
+    )
+  )
 
 
 
