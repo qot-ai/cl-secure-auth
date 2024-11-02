@@ -16,6 +16,7 @@
                 :create-user
                 :find-user-by-id
                 :find-user-by-email
+                :user-error
                 :ensure-tables))
 
 (in-package :cl-secure-auth/tests/db)
@@ -27,9 +28,13 @@
     :host "localhost"
     :port 5432))
 
+(defun clean-database ()
+  "Remove all test data"
+  (mito:execute-sql "TRUNCATE TABLE users CASCADE"))
 
 (setup
   (apply #'init-db *test-db-config*)
+  (clean-database)
   (ensure-tables))
 
 (deftest user-validation-tests
@@ -49,16 +54,16 @@
 
 (deftest user-creation-tests
   (testing "creating valid user"
+    (clean-database)
     (ok (create-user  "test@example.com"  "SecurePass123!")
         "Should create user successfully")
     (ok (find-user-by-email "test@example.com")
         "Should find created user"))
   (testing "duplicate email rejection"
+    (clean-database)
     (create-user "duplicate@example.com" "SecurePass123!")
     (ok (signals (create-user "duplicate@example.com" "SecurePass123!") 'user-error)
         "Should reject duplicate email")
-
     )
-
 )
 
