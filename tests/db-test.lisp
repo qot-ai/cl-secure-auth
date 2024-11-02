@@ -17,6 +17,11 @@
                 :find-user-by-id
                 :find-user-by-email
                 :user-error
+                :get-user-roles
+                :set-user-roles
+                :add-user-role
+                :remove-user-role
+                :user-has-role-p
                 :ensure-tables))
 
 (in-package :cl-secure-auth/tests/db)
@@ -90,5 +95,32 @@
     )
   )
 
+(deftest role-management-tests
+  (testing "default roles"
+    (clean-database)
+    (let* ((user (create-user "roles@example.com" "SecurePass123!"))
+           (roles (get-user-roles user)))
+      (ok (member "user" roles :test #'string=) "New user should have the user role")))
 
+  (testing "add role"
+    (clean-database)
+    (let ((user (create-user "roles@example.com" "SecurePass123!")))
+      (add-user-role user "admin")
+      (ok (user-has-role-p user "admin") "Should have newly added admin role")
+      (ok (user-has-role-p user "user") "Should still have default user role")))
+
+  (testing "remove role"
+    (clean-database)
+    (let ((user (create-user "roles@example.com" "SecurePass123!")))
+      (add-user-role user "admin")
+      (remove-user-role user "admin")
+      (ng (user-has-role-p user "admin") "Should not have admin role as it was removed")))
+
+  (testing "duplicate role addition"
+    (clean-database)
+    (let ((user (create-user "roles@example.com" "SecurePass123!")))
+      (add-user-role user "admin")
+      (add-user-role user "admin")
+      (let ((roles (get-user-roles user)))
+        (ok (= 1 (count "admin" roles :test #'string=)) "Role should only appear once")))))
 

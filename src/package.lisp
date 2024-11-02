@@ -32,4 +32,9 @@
    :save-user
    :find-user-by-id
    :find-user-by-email
+   :get-user-roles
+   :set-user-roles
+   :add-user-role
+   :remove-user-role
+   :user-has-role-p
    ))

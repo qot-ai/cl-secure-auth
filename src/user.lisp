@@ -77,8 +77,33 @@
     (mito:create-dao 'user 
                      :email (string-downcase email)
                      :password-hash password-hash
-                     :verified verified)
-                     ))
+                     :verified verified)))
+
+(defun get-user-roles (user)
+  "Get user roles as a list"
+  (cdr (assoc :roles
+              (cl-json:decode-json-from-string (user-roles-json user))
+              :test #'equal)))
+
+(defun set-user-roles (user role-list)
+  "Set user roles from a list"
+  (setf (user-roles-json user)
+        (cl-json:encode-json-alist-to-string `(( "roles" . ,role-list))))
+  (save-user user))
 
 
+(defun add-user-role (user role)
+  "Add a role to user if they don't already have it"
+  (let ((current-roles (get-user-roles user)))
+    (unless (member role current-roles :test #'string=)
+      (set-user-roles user (cons role current-roles)))))
 
+(defun remove-user-role (user role)
+  "Remove a role from user if they have it"
+  (let ((current-roles (get-user-roles user)))
+    (when (member role current-roles :test #'string=)
+      (set-user-roles user (remove role current-roles :test #'string=)))))
+
+(defun user-has-role-p (user role)
+  "Check if user has the specified role"
+  (member role (get-user-roles user) :test #'string=))
