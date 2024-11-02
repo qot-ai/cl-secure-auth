@@ -1,6 +1,6 @@
 (defpackage :cl-secure-auth/tests/db
   (:use :cl :rove)
-  (:import-from :cl-secure-auth
+  (:shadowing-import-from :cl-secure-auth
                 :user
                 :user-id
                 :user-email
@@ -22,6 +22,7 @@
                 :add-user-role
                 :remove-user-role
                 :user-has-role-p
+                :user-verified
                 :ensure-tables))
 
 (in-package :cl-secure-auth/tests/db)
@@ -123,4 +124,27 @@
       (add-user-role user "admin")
       (let ((roles (get-user-roles user)))
         (ok (= 1 (count "admin" roles :test #'string=)) "Role should only appear once")))))
+
+
+(deftest user-verification-tests
+  (testing "default verification status"
+    (clean-database)
+    (let ((user (create-user "unverified@example.com" "SecurePass123!" )))
+      (ng (user-verified user) "New user should not be verified by default")))
+
+  (testing "create verified user"
+    (clean-database)
+    (let ((user (create-user "verified@example.com" "SecurePass123!" :verified t)))
+      (ok (user-verified user) "User created with verified flag should be verified")))
+
+  (testing "verify user"
+    (clean-database)
+    (let ((user (create-user "toverify@example.com" "SecurePass123!")))
+      (setf (user-verified user) t)
+      (save-user user)
+      (let ((found-user (find-user-by-email "toverify@example.com")))
+        (ok (user-verified found-user) "User should be verified after setting verified status")))))
+
+
+
 

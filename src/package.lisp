@@ -37,4 +37,5 @@
    :add-user-role
    :remove-user-role
    :user-has-role-p
+   :user-verified
    ))
