@@ -63,7 +63,22 @@
     (clean-database)
     (create-user "duplicate@example.com" "SecurePass123!")
     (ok (signals (create-user "duplicate@example.com" "SecurePass123!") 'user-error)
-        "Should reject duplicate email")
-    )
-)
+        "Should reject duplicate email")))
+
+(deftest user-find-tests
+  (testing "find by email"
+           (clean-database)
+           (let ((user (create-user "find@example.com" "SecurePass123!")))
+             (ok (find-user-by-email "find@example.com") "Should find existing user")
+             (ok (find-user-by-email "FIND@EXAMPLE.COM") "Should be case insensititve")
+             (ng (find-user-by-email "notfound@example.com") "Should return nil for non-existing user")))
+  (testing "find by id"
+    (clean-database)
+    (let* ((user (create-user "findid@example.com" "SecurePass123!"))
+           (user-id (user-id user)))
+      (ok (find-user-by-id user-id) "Should find user by id")
+      (ng (find-user-by-id (uuid:make-v4-uuid)) "Should return nil for non existing user id"))))
+
+
+
 
