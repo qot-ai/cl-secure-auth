@@ -38,4 +38,7 @@
    :remove-user-role
    :user-has-role-p
    :user-verified
+   :user-password-hash
+   :verify-password
+   :change-password
    ))

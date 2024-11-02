@@ -12,7 +12,8 @@
 
 (defparameter *dao-classes*
   ;; Add all DAO classes here
-  '(user))
+  '(user
+    session))
 
 
 (defun ensure-tables ()

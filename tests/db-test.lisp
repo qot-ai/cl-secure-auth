@@ -23,6 +23,9 @@
                 :remove-user-role
                 :user-has-role-p
                 :user-verified
+                :user-password-hash
+                :verify-password
+                :change-password
                 :ensure-tables))
 
 (in-package :cl-secure-auth/tests/db)
@@ -146,5 +149,32 @@
         (ok (user-verified found-user) "User should be verified after setting verified status")))))
 
 
+(deftest password-management-tests
+  (testing "password verification"
+    (clean-database)
+    (let ((user (create-user "pwd@example.com" "SecurePass123!")))
+      (ok (verify-password user "SecurePass123!")
+          "Should verify correct password")
+      (ng (verify-password user "WrongPass123!")
+          "Should reject wrong password")))
 
+  (testing "password change"
+    (clean-database)
+    (let ((user (create-user "changepwd@example.com" "OldPass123!")))
+      (ok (change-password user "OldPass123!" "NewPass123!")
+          "Should accept valid password change")
+      (ok (verify-password user "NewPass123!")
+          "Should verify new password after change")
+      (ng (verify-password user "OldPass123!")
+          "Should not accept old password after change")))
+
+  (testing "invalid password changes"
+    (clean-database)
+    (let ((user (create-user "invalid@example.com" "Current123!")))
+      (ok (signals (change-password user "WrongPass123!" "NewPass123!")
+                   'user-error)
+          "Should reject change with wrong current password")
+      (ok (signals (change-password user "Current123!" "weak")
+                   'user-error)
+          "Should reject change to invalid new password"))))
 

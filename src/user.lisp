@@ -107,3 +107,21 @@
 (defun user-has-role-p (user role)
   "Check if user has the specified role"
   (member role (get-user-roles user) :test #'string=))
+
+(defun verify-password (user password)
+  "Verify a user's password"
+  (cl-argon2:verify-password (user-password-hash user)
+                             password :type :argon2id))
+
+(defun change-password (user old-password new-password)
+  "Change user's password"
+  (unless (verify-password user old-password)
+    (error 'user-error :message "Invalid password"))
+  (unless (validate-password new-password)
+    (error 'user-error :message "New password must be at least 8 characters and contain uppercase, lowercase, numbers and special characters"))
+
+  (let* ((salt (cl-argon2:generate-salt))
+         (new-hash (cl-argon2:argon2-hash-encoded new-password salt :type :argon2id)))
+    (setf (user-password-hash user) new-hash)
+    (save-user user)))
+

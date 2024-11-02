@@ -37,8 +37,10 @@
   :components ((:module "tests"
                 :components
                         ((:file "core")
-                         (:file "db-test"))))
+                         (:file "db-test")
+                         (:file "session-tests"))))
   :perform (test-op (o c)
                     (symbol-call :rove :run-suite :cl-secure-auth/tests/core)
                     (symbol-call :rove :run-suite :cl-secure-auth/tests/db)
+                    (symbol-call :rove :run-suite :cl-secure-auth/tests/session)
                     ))
